@@ -1,0 +1,21 @@
+#include <iostream>
+#include "suitesparse_matrix.h"
+
+int main(int argc, char const *argv[])
+{
+    if (argc != 2)
+    {
+        std::cerr << "Invalid arguments" << std::endl;
+        return 1;
+    }
+    SuiteSparseMatrix mat(argv[1], "Problem", "A");
+
+    std::cout << "jc: " << mat.jc() << std::endl;
+    std::cout << "ir: " << mat.ir() << std::endl;
+    std::cout << "data: " << mat.data() << std::endl;
+    std::cout << "cols: " << mat.cols() << std::endl;
+    std::cout << "rows: " << mat.rows() << std::endl;
+    std::cout << "data_width: " << mat.data_width() << std::endl;
+    std::cout << "size: " << mat.size() << std::endl;
+    std::cout << "nnz: " << mat.nnz() << std::endl;
+}
