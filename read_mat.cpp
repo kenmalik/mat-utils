@@ -1,80 +1,85 @@
-#if WITH_MATLAB
-
-#include <iostream>
-#include <string>
-#include <vector>
-#include <tuple>
-#include <iomanip>
-
 #include "mat.h"
+#include "matrix.h"
 
-std::tuple<std::vector<float>, size_t, size_t> read_suitesparse_mat(std::string filename)
+#include <vector>
+#include <iostream>
+
+void read_suitesparse(const char *mat_file_name, const char *arr, const char *field)
 {
-    const char *file = filename.c_str();
-    MATFile *pmat = nullptr;
-    pmat = matOpen(file, "r");
-    if (pmat == nullptr)
+    MATFile *mfPtr;
+    mxArray *aPtr;
+
+    mfPtr = matOpen(mat_file_name, "r");
+    if (mfPtr == NULL)
     {
-        throw std::invalid_argument("Cannot find " + std::string(file));
+        std::cerr << "Error opening file" << mat_file_name << std::endl;
+        exit(1);
     }
 
-    const char *varname = nullptr;
-    mxArray *problem_struct = matGetNextVariable(pmat, &varname);
-    if (problem_struct == nullptr)
+    aPtr = matGetVariable(mfPtr, arr);
+    if (aPtr == NULL)
     {
-        matClose(pmat);
-        throw std::invalid_argument("Failed to read variable from MAT file.");
+        std::cerr << "mxArray not found:" << arr << std::endl;
+        exit(1);
     }
 
-    mxArray *A = mxGetField(problem_struct, 0, "A");
-    if (A == nullptr)
+    if (mxGetClassID(aPtr) != mxSTRUCT_CLASS)
     {
-        matClose(pmat);
-        mxDestroyArray(problem_struct);
-        throw std::invalid_argument("Field 'A' is not found in struct 'Problem'");
+        std::cerr << arr << " is not a structure" << std::endl;
+        mxDestroyArray(aPtr);
+        exit(1);
     }
+
+    if (mxGetFieldNumber(aPtr, field) == -1)
+    {
+        std::cerr << "Field not found:" << field << std::endl;
+        mxDestroyArray(aPtr);
+        exit(1);
+    }
+
+    mxArray *A = nullptr;
+    A = mxGetField(aPtr, 0, field);
 
     if (!mxIsSparse(A))
     {
-        mxDestroyArray(A);
-        matClose(pmat);
-        throw std::invalid_argument("Matrix is not sparse");
+        std::cerr << "Matrix is not sparse!" << std::endl;
+        return;
     }
 
     mwSize rows = mxGetM(A);
     mwSize cols = mxGetN(A);
-    mwIndex *jc = mxGetJc(A); // column pointers (size cols+1)
-    mwIndex *ir = mxGetIr(A); // row indices (size nzmax)
-    double *pr = mxGetPr(A);  // nonzero values (size nzmax)
-
-    std::vector<float> dense(rows * cols, 0.0);
-    for (mwIndex j = 0; j < cols; ++j)
+    if (rows != cols)
     {
-        for (mwIndex k = jc[j]; k < jc[j + 1]; ++k)
-        {
-            mwIndex i = ir[k];
-            dense[i + j * rows] = static_cast<float>(pr[k]);
-        }
+        throw std::runtime_error("error reading SPD mat: m != n");
     }
 
-    mxDestroyArray(problem_struct);
-    matClose(pmat);
+    mwIndex *jc = mxGetJc(A); // Column pointers (size cols+1)
+    mwIndex *ir = mxGetIr(A); // Row indices (size nnz)
+    double *A_data = mxGetPr(A);  // Non-zero values (size nnz)
 
-    return {dense, rows, cols};
+    mwSize nnz = jc[cols];
+
+    mwSize data_width = mxGetElementSize(A);
+    mwSize size = mxGetNumberOfElements(A);
+
+    std::cout << "Size: " << size << std::endl;
+    std::cout << "# Non-Zeros: " << nnz << std::endl;
+
+    mxDestroyArray(aPtr);
+    mxDestroyArray(A);
+    if (matClose(mfPtr) != 0)
+    {
+        std::cerr << "Error closing file" << mat_file_name << std::endl;
+        exit(1);
+    }
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char const *argv[])
 {
-    auto [mat, rows, cols] = read_suitesparse_mat(argv[1]);
-
-    for (int i = 0; i < rows; i++)
+    if (argc != 2)
     {
-        for (int j = 0; j < rows; j++)
-        {
-            std::cout << std::setw(8) << std::setprecision(2) << mat.at(i * rows + j) << " ";
-        }
-        std::cout << std::endl;
+        std::cerr << "Invalid arguments" << std::endl;
+        return 1;
     }
+    read_suitesparse(argv[1], "Problem", "A");
 }
-
-#endif
