@@ -16,7 +16,7 @@ public:
     size_t data_width();
     size_t size();
 
-    SuiteSparseMatrix(std::string mat_file_name, std::string arr, std::string field);
+    SuiteSparseMatrix(const std::string &mat_file_name, const std::string &arr, const std::string &field);
     ~SuiteSparseMatrix();
 
 private:

@@ -42,7 +42,7 @@ size_t SuiteSparseMatrix::size()
     return mxGetNumberOfElements(A);
 }
 
-SuiteSparseMatrix::SuiteSparseMatrix(std::string mat_file_name, std::string arr, std::string field)
+SuiteSparseMatrix::SuiteSparseMatrix(const std::string &mat_file_name, const std::string &arr, const std::string &field)
 {
     using namespace std::string_literals;
 
