@@ -10,6 +10,20 @@ int main(int argc, char const *argv[])
     }
     SuiteSparseMatrix mat(argv[1], "Problem", "A");
 
+    std::cout << "jc: ";
+    for (auto iter = mat.jc(); *iter < mat.jc_size(); iter++)
+    {
+        std::cout << *iter << ' ';
+    }
+    std::cout << std::endl;
+
+    std::cout << "ir: ";
+    for (auto iter = mat.ir(); *iter < mat.ir_size(); iter++)
+    {
+        std::cout << *iter << ' ';
+    }
+    std::cout << std::endl;
+
     std::cout << "jc: " << mat.jc() << std::endl;
     std::cout << "ir: " << mat.ir() << std::endl;
     std::cout << "data: " << mat.data() << std::endl;

@@ -14,12 +14,22 @@ struct SuiteSparseMatrixImpl
 
 size_t *SuiteSparseMatrix::jc()
 {
-    return mxGetJc(impl->A_ptr); // Column ptrs (size cols+1)
+    return mxGetJc(impl->A_ptr);
+}
+
+size_t SuiteSparseMatrix::jc_size()
+{
+    return cols() + 1;
 }
 
 size_t *SuiteSparseMatrix::ir()
 {
-    return mxGetIr(impl->A_ptr); // Row indices (size nnz)
+    return mxGetIr(impl->A_ptr);
+}
+
+size_t SuiteSparseMatrix::ir_size()
+{
+    return nnz();
 }
 
 double *SuiteSparseMatrix::data()
