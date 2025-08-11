@@ -1,7 +1,9 @@
 #pragma once
 
-#include "mat.h"
-#include "matrix.h"
+#include <string>
+
+// We use the PIMPL idiom to avoid having to include MATLAB headers into application code
+struct SuiteSparseMatrixImpl;
 
 class SuiteSparseMatrix
 {
@@ -20,7 +22,5 @@ public:
     ~SuiteSparseMatrix();
 
 private:
-    MATFile *mfPtr = nullptr;
-    mxArray *aPtr = nullptr;
-    mxArray *A = nullptr;
+    SuiteSparseMatrixImpl *impl;
 };
