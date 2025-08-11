@@ -83,7 +83,8 @@ SuiteSparseMatrix::SuiteSparseMatrix(
         throw std::invalid_argument("field not found: "s + field);
     }
 
-    impl->A_ptr = mxGetField(impl->problem_ptr, 0, field.c_str());
+    constexpr int INDEX = 0;
+    impl->A_ptr = mxGetField(impl->problem_ptr, INDEX, field.c_str());
 
     if (!mxIsSparse(impl->A_ptr))
     {
