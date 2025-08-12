@@ -8,7 +8,7 @@ int main(int argc, char const *argv[])
         std::cerr << "Invalid arguments" << std::endl;
         return 1;
     }
-    SuiteSparseMatrix mat(argv[1], "Problem", "A");
+    SuiteSparseMatrix mat(argv[1]);
 
     std::cout << "jc: ";
     for (auto iter = mat.jc(); *iter < mat.jc_size(); iter++)
