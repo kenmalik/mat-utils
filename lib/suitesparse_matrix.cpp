@@ -7,16 +7,21 @@
 
 #include "suitesparse_matrix.h"
 
+auto mxArray_deleter = [](mxArray *ptr)
+{
+    mxDestroyArray(ptr);
+};
+using mxArrayPtr = std::unique_ptr<mxArray, decltype(mxArray_deleter)>;
+
 struct SuiteSparseMatrixImpl
 {
     MATFile *mat_file_ptr = nullptr;
-    mxArray *problem_ptr = nullptr;
-    mxArray *A_ptr = nullptr;
+    mxArrayPtr A_ptr{nullptr, mxArray_deleter};
 };
 
 size_t *SuiteSparseMatrix::jc()
 {
-    return mxGetJc(impl->A_ptr);
+    return mxGetJc(impl->A_ptr.get());
 }
 
 size_t SuiteSparseMatrix::jc_size()
@@ -26,7 +31,7 @@ size_t SuiteSparseMatrix::jc_size()
 
 size_t *SuiteSparseMatrix::ir()
 {
-    return mxGetIr(impl->A_ptr);
+    return mxGetIr(impl->A_ptr.get());
 }
 
 size_t SuiteSparseMatrix::ir_size()
@@ -36,17 +41,17 @@ size_t SuiteSparseMatrix::ir_size()
 
 double *SuiteSparseMatrix::data()
 {
-    return mxGetPr(impl->A_ptr);
+    return mxGetPr(impl->A_ptr.get());
 }
 
 size_t SuiteSparseMatrix::cols()
 {
-    return mxGetN(impl->A_ptr);
+    return mxGetN(impl->A_ptr.get());
 }
 
 size_t SuiteSparseMatrix::rows()
 {
-    return mxGetM(impl->A_ptr);
+    return mxGetM(impl->A_ptr.get());
 }
 
 size_t SuiteSparseMatrix::nnz()
@@ -56,16 +61,13 @@ size_t SuiteSparseMatrix::nnz()
 
 size_t SuiteSparseMatrix::data_width()
 {
-    return mxGetElementSize(impl->A_ptr);
+    return mxGetElementSize(impl->A_ptr.get());
 }
 
 size_t SuiteSparseMatrix::size()
 {
-    return mxGetNumberOfElements(impl->A_ptr);
+    return mxGetNumberOfElements(impl->A_ptr.get());
 }
-
-auto mxArray_deleter = [](mxArray *ptr) { mxDestroyArray(ptr); };
-using mxArrayPtr = std::unique_ptr<mxArray, decltype(mxArray_deleter)>;
 
 SuiteSparseMatrix::SuiteSparseMatrix(
     const std::string &mat_file_name,
@@ -84,14 +86,16 @@ SuiteSparseMatrix::SuiteSparseMatrix(
 
     if (structs.empty())
     {
-        impl->A_ptr = matGetVariable(impl->mat_file_ptr, field.c_str());
-        if (impl->A_ptr == NULL)
+        mxArray *A = matGetVariable(impl->mat_file_ptr, field.c_str());
+        impl->A_ptr.reset(mxDuplicateArray(A));
+
+        if (impl->A_ptr.get() == NULL)
         {
             throw std::invalid_argument("mxArray not found "s + field);
         }
 
-        mwSize rows = mxGetM(impl->A_ptr);
-        mwSize cols = mxGetN(impl->A_ptr);
+        mwSize rows = mxGetM(impl->A_ptr.get());
+        mwSize cols = mxGetN(impl->A_ptr.get());
         if (rows != cols)
         {
             throw std::invalid_argument("error reading SPD matrix: m != n");
@@ -152,15 +156,16 @@ SuiteSparseMatrix::SuiteSparseMatrix(
     }
 
     constexpr int INDEX = 0;
-    impl->A_ptr = mxGetField(open_structs.top().get(), INDEX, field.c_str());
+    mxArray *A = mxGetField(open_structs.top().get(), INDEX, field.c_str());
+    impl->A_ptr.reset(mxDuplicateArray(A));
 
-    if (!mxIsSparse(impl->A_ptr))
+    if (!mxIsSparse(impl->A_ptr.get()))
     {
         throw std::invalid_argument("matrix is not sparse");
     }
 
-    mwSize rows = mxGetM(impl->A_ptr);
-    mwSize cols = mxGetN(impl->A_ptr);
+    mwSize rows = mxGetM(impl->A_ptr.get());
+    mwSize cols = mxGetN(impl->A_ptr.get());
     if (rows != cols)
     {
         throw std::invalid_argument("error reading SPD matrix: m != n");
@@ -169,7 +174,11 @@ SuiteSparseMatrix::SuiteSparseMatrix(
 
 SuiteSparseMatrix::~SuiteSparseMatrix()
 {
-    mxDestroyArray(impl->problem_ptr);
+    close();
+}
+
+void SuiteSparseMatrix::close()
+{
     if (matClose(impl->mat_file_ptr) != 0)
     {
         std::cerr << "Error closing mat file" << std::endl;
