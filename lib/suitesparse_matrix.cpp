@@ -1,4 +1,6 @@
 #include <iostream>
+#include <stack>
+#include <memory>
 
 #include <mat.h>
 #include <matrix.h>
@@ -62,12 +64,17 @@ size_t SuiteSparseMatrix::size()
     return mxGetNumberOfElements(impl->A_ptr);
 }
 
+auto mxArray_deleter = [](mxArray *ptr) { mxDestroyArray(ptr); };
+using mxArrayPtr = std::unique_ptr<mxArray, decltype(mxArray_deleter)>;
+
 SuiteSparseMatrix::SuiteSparseMatrix(
     const std::string &mat_file_name,
-    const std::string &arr,
+    const std::vector<std::string> &structs,
     const std::string &field) : impl(new SuiteSparseMatrixImpl())
 {
     using namespace std::string_literals;
+
+    std::stack<mxArrayPtr> open_structs{};
 
     impl->mat_file_ptr = matOpen(mat_file_name.c_str(), "r");
     if (impl->mat_file_ptr == NULL)
@@ -75,26 +82,77 @@ SuiteSparseMatrix::SuiteSparseMatrix(
         throw std::runtime_error("Error opening file "s + mat_file_name);
     }
 
-    impl->problem_ptr = matGetVariable(impl->mat_file_ptr, arr.c_str());
-    if (impl->problem_ptr == NULL)
+    if (structs.empty())
     {
-        throw std::invalid_argument("mxArray not found "s + arr);
+        impl->A_ptr = matGetVariable(impl->mat_file_ptr, field.c_str());
+        if (impl->A_ptr == NULL)
+        {
+            throw std::invalid_argument("mxArray not found "s + field);
+        }
+
+        mwSize rows = mxGetM(impl->A_ptr);
+        mwSize cols = mxGetN(impl->A_ptr);
+        if (rows != cols)
+        {
+            throw std::invalid_argument("error reading SPD matrix: m != n");
+        }
+
+        return;
     }
 
-    if (mxGetClassID(impl->problem_ptr) != mxSTRUCT_CLASS)
+    auto structs_iter = structs.begin();
+    if (structs_iter != structs.end())
     {
-        mxDestroyArray(impl->problem_ptr);
-        throw std::invalid_argument(arr + " is not a structure"s);
+        auto arr = *structs_iter;
+
+        mxArrayPtr mat_variable{matGetVariable(impl->mat_file_ptr, arr.c_str()), mxArray_deleter};
+        if (mat_variable.get() == NULL)
+        {
+            throw std::invalid_argument("mxArray not found "s + arr);
+        }
+
+        if (mxGetClassID(mat_variable.get()) != mxSTRUCT_CLASS)
+        {
+            throw std::invalid_argument(arr + " is not a structure"s);
+        }
+
+        open_structs.push(std::move(mat_variable));
+        ++structs_iter;
     }
 
-    if (mxGetFieldNumber(impl->problem_ptr, field.c_str()) == -1)
+    for (; structs_iter != structs.end(); ++structs_iter)
     {
-        mxDestroyArray(impl->problem_ptr);
+        auto current = open_structs.top().get();
+        auto arr = *structs_iter;
+
+        if (mxGetFieldNumber(current, arr.c_str()) == -1)
+        {
+            throw std::invalid_argument("field not found: "s + arr);
+        }
+
+        constexpr int INDEX = 0;
+        mxArrayPtr next_struct{mxGetField(current, INDEX, arr.c_str()), mxArray_deleter};
+        if (next_struct.get() == NULL)
+        {
+            throw std::invalid_argument("mxArray not found "s + arr);
+        }
+
+        if (mxGetClassID(next_struct.get()) != mxSTRUCT_CLASS)
+        {
+            throw std::invalid_argument(arr + " is not a structure"s);
+        }
+
+        open_structs.push(std::move(next_struct));
+    }
+
+    auto last_struct = open_structs.top().get();
+    if (mxGetFieldNumber(last_struct, field.c_str()) == -1)
+    {
         throw std::invalid_argument("field not found: "s + field);
     }
 
     constexpr int INDEX = 0;
-    impl->A_ptr = mxGetField(impl->problem_ptr, INDEX, field.c_str());
+    impl->A_ptr = mxGetField(open_structs.top().get(), INDEX, field.c_str());
 
     if (!mxIsSparse(impl->A_ptr))
     {

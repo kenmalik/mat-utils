@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include <string>
 
 // We use the PIMPL idiom to avoid having to include MATLAB headers into application code
@@ -20,7 +21,7 @@ public:
     size_t nnz();
     size_t data_width();
 
-    SuiteSparseMatrix(const std::string &mat_file_name, const std::string &arr = "Problem", const std::string &field = "A");
+    SuiteSparseMatrix(const std::string &mat_file_name, const std::vector<std::string> &arr, const std::string &field);
     ~SuiteSparseMatrix();
 
 private:
