@@ -1,14 +1,14 @@
 #pragma once
 
-#include <vector>
 #include <string>
+#include <vector>
 
-// We use the PIMPL idiom to avoid having to include MATLAB headers into application code
+// We use the PIMPL idiom to avoid having to include MATLAB headers into
+// application code
 struct MatReaderImpl;
 
-class MatReader
-{
-public:
+class MatReader {
+  public:
     size_t *jc();
     size_t jc_size();
     size_t *ir();
@@ -23,9 +23,10 @@ public:
 
     void close();
 
-    MatReader(const std::string &mat_file_name, const std::vector<std::string> &arr, const std::string &field);
+    MatReader(const std::string &mat_file_name,
+              const std::vector<std::string> &arr, const std::string &field);
     ~MatReader();
 
-private:
+  private:
     MatReaderImpl *impl;
 };
