@@ -1,2 +1,2 @@
 add_executable(example "example.cpp")
-target_link_libraries(example PRIVATE mat_reader)
+target_link_libraries(example PRIVATE mat_utils)

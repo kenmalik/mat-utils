@@ -1,4 +1,5 @@
 #include "mat_utils/mat_reader.h"
+#include "mat_utils/mat_writer.h"
 #include <iostream>
 
 int main(int argc, char const *argv[]) {
@@ -28,4 +29,8 @@ int main(int argc, char const *argv[]) {
     std::cout << "data_width: " << mat.data_width() << std::endl;
     std::cout << "size: " << mat.size() << std::endl;
     std::cout << "nnz: " << mat.nnz() << std::endl;
+
+    std::vector<float> A(3 * 3, 10);
+    MatWriter w("test_mat.mat");
+    w.write_matrix("A", A, 3, 3);
 }
