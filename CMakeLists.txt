@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.20)
-project(Read_Mat_Test)
+project(Mat_Utils VERSION 0.1.2)
 
-option(SUITESPARSE_MATRIX_BUILD_EXAMPLES OFF)
+option(MAT_UTILS_BUILD_EXAMPLES OFF)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_subdirectory("lib")
 
-if(SUITESPARSE_MATRIX_BUILD_EXAMPLES)
+if(MAT_UTILS_BUILD_EXAMPLES)
     add_subdirectory("examples")
 endif()
