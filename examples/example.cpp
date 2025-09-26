@@ -1,25 +1,21 @@
+#include "mat_utils/mat_reader.h"
 #include <iostream>
-#include "mat_reader.h"
 
-int main(int argc, char const *argv[])
-{
-    if (argc != 2)
-    {
+int main(int argc, char const *argv[]) {
+    if (argc != 2) {
         std::cerr << "Invalid arguments" << std::endl;
         return 1;
     }
     MatReader mat(argv[1], {"Problem"}, "A");
 
     std::cout << "jc: ";
-    for (auto iter = mat.jc(); *iter < mat.jc_size(); iter++)
-    {
+    for (auto iter = mat.jc(); *iter < mat.jc_size(); iter++) {
         std::cout << *iter << ' ';
     }
     std::cout << std::endl;
 
     std::cout << "ir: ";
-    for (auto iter = mat.ir(); *iter < mat.ir_size(); iter++)
-    {
+    for (auto iter = mat.ir(); *iter < mat.ir_size(); iter++) {
         std::cout << *iter << ' ';
     }
     std::cout << std::endl;

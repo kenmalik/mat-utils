@@ -5,7 +5,7 @@
 #include <mat.h>
 #include <matrix.h>
 
-#include "mat_reader.h"
+#include "mat_utils/mat_reader.h"
 
 auto mxArray_deleter = [](mxArray *ptr) { mxDestroyArray(ptr); };
 using mxArrayPtr = std::unique_ptr<mxArray, decltype(mxArray_deleter)>;
