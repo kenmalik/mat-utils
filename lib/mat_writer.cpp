@@ -31,9 +31,9 @@ void MatWriter::close() {
     }
 }
 
-void MatWriter::write_matrix(const std::string &name,
-                             const std::vector<float> &matrix, size_t rows,
-                             size_t cols) {
+void MatWriter::write_dense(const std::string &name,
+                            const std::vector<float> &matrix, size_t rows,
+                            size_t cols) {
     mxArray *pArr = mxCreateNumericMatrix(rows, cols, mxSINGLE_CLASS, mxREAL);
     if (pArr == NULL) {
         throw std::runtime_error("Error creating float matrix");

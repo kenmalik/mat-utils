@@ -18,8 +18,8 @@ class MatWriter {
 
     void close();
 
-    void write_matrix(const std::string &name, const std::vector<float> &matrix,
-                      size_t rows, size_t cols);
+    void write_dense(const std::string &name, const std::vector<float> &matrix,
+                     size_t rows, size_t cols);
 
   private:
     MatWriterImpl *impl;
