@@ -7,7 +7,7 @@ int main(int argc, char const *argv[]) {
         std::cerr << "Invalid arguments" << std::endl;
         return 1;
     }
-    MatReader mat(argv[1], {"Problem"}, "A");
+    mat_utils::MatReader mat(argv[1], {"Problem"}, "A");
 
     std::cout << "jc: ";
     for (auto iter = mat.jc(); *iter < mat.jc_size(); iter++) {
@@ -31,6 +31,6 @@ int main(int argc, char const *argv[]) {
     std::cout << "nnz: " << mat.nnz() << std::endl;
 
     std::vector<float> A(3 * 3, 10);
-    MatWriter w("test_mat.mat");
+    mat_utils::MatWriter w("test_mat.mat");
     w.write_matrix("A", A, 3, 3);
 }

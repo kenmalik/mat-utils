@@ -6,6 +6,8 @@
 
 #include "mat_utils/mat_writer.h"
 
+namespace mat_utils {
+
 struct MatWriterImpl {
     MATFile *mat_file = nullptr;
 };
@@ -45,3 +47,5 @@ void MatWriter::write_matrix(const std::string &name,
         throw std::runtime_error("Error writing matrix '" + name + "' to file");
     }
 }
+
+} // namespace mat_utils

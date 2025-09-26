@@ -10,6 +10,8 @@
 auto mxArray_deleter = [](mxArray *ptr) { mxDestroyArray(ptr); };
 using mxArrayPtr = std::unique_ptr<mxArray, decltype(mxArray_deleter)>;
 
+namespace mat_utils {
+
 struct MatReaderImpl {
     MATFile *mat_file_ptr = nullptr;
     mxArrayPtr A_ptr{nullptr, mxArray_deleter};
@@ -134,3 +136,5 @@ void MatReader::close() {
     }
     delete impl;
 }
+
+} // namespace mat_utils

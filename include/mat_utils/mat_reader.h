@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+namespace mat_utils {
+
 // We use the PIMPL idiom to avoid having to include MATLAB headers into
 // application code
 struct MatReaderImpl;
@@ -30,3 +32,5 @@ class MatReader {
   private:
     MatReaderImpl *impl;
 };
+
+} // namespace mat_utils
