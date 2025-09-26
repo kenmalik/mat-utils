@@ -4,9 +4,9 @@
 #include <string>
 
 // We use the PIMPL idiom to avoid having to include MATLAB headers into application code
-struct SuiteSparseMatrixImpl;
+struct MatReaderImpl;
 
-class SuiteSparseMatrix
+class MatReader
 {
 public:
     size_t *jc();
@@ -23,9 +23,9 @@ public:
 
     void close();
 
-    SuiteSparseMatrix(const std::string &mat_file_name, const std::vector<std::string> &arr, const std::string &field);
-    ~SuiteSparseMatrix();
+    MatReader(const std::string &mat_file_name, const std::vector<std::string> &arr, const std::string &field);
+    ~MatReader();
 
 private:
-    SuiteSparseMatrixImpl *impl;
+    MatReaderImpl *impl;
 };

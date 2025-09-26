@@ -5,7 +5,7 @@
 #include <mat.h>
 #include <matrix.h>
 
-#include "suitesparse_matrix.h"
+#include "mat_reader.h"
 
 auto mxArray_deleter = [](mxArray *ptr)
 {
@@ -13,66 +13,66 @@ auto mxArray_deleter = [](mxArray *ptr)
 };
 using mxArrayPtr = std::unique_ptr<mxArray, decltype(mxArray_deleter)>;
 
-struct SuiteSparseMatrixImpl
+struct MatReaderImpl
 {
     MATFile *mat_file_ptr = nullptr;
     mxArrayPtr A_ptr{nullptr, mxArray_deleter};
 };
 
-size_t *SuiteSparseMatrix::jc()
+size_t *MatReader::jc()
 {
     return mxGetJc(impl->A_ptr.get());
 }
 
-size_t SuiteSparseMatrix::jc_size()
+size_t MatReader::jc_size()
 {
     return cols() + 1;
 }
 
-size_t *SuiteSparseMatrix::ir()
+size_t *MatReader::ir()
 {
     return mxGetIr(impl->A_ptr.get());
 }
 
-size_t SuiteSparseMatrix::ir_size()
+size_t MatReader::ir_size()
 {
     return nnz();
 }
 
-double *SuiteSparseMatrix::data()
+double *MatReader::data()
 {
     return mxGetPr(impl->A_ptr.get());
 }
 
-size_t SuiteSparseMatrix::cols()
+size_t MatReader::cols()
 {
     return mxGetN(impl->A_ptr.get());
 }
 
-size_t SuiteSparseMatrix::rows()
+size_t MatReader::rows()
 {
     return mxGetM(impl->A_ptr.get());
 }
 
-size_t SuiteSparseMatrix::nnz()
+size_t MatReader::nnz()
 {
     return jc()[cols()];
 }
 
-size_t SuiteSparseMatrix::data_width()
+size_t MatReader::data_width()
 {
     return mxGetElementSize(impl->A_ptr.get());
 }
 
-size_t SuiteSparseMatrix::size()
+size_t MatReader::size()
 {
     return mxGetNumberOfElements(impl->A_ptr.get());
 }
 
-SuiteSparseMatrix::SuiteSparseMatrix(
+MatReader::MatReader(
     const std::string &mat_file_name,
     const std::vector<std::string> &structs,
-    const std::string &field) : impl(new SuiteSparseMatrixImpl())
+    const std::string &field) : impl(new MatReaderImpl())
 {
     using namespace std::string_literals;
 
@@ -172,12 +172,12 @@ SuiteSparseMatrix::SuiteSparseMatrix(
     }
 }
 
-SuiteSparseMatrix::~SuiteSparseMatrix()
+MatReader::~MatReader()
 {
     close();
 }
 
-void SuiteSparseMatrix::close()
+void MatReader::close()
 {
     if (matClose(impl->mat_file_ptr) != 0)
     {
