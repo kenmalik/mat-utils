@@ -8,16 +8,19 @@ namespace mat_utils {
 
 class MatReader {
 public:
+  MatReader(const std::string &mat_file_name,
+            const std::vector<std::string> &arr, const std::string &field);
+  virtual ~MatReader();
+
+  MatReader(MatReader &&rhs) noexcept;
+  MatReader &operator=(MatReader &&rhs) noexcept;
+
   size_t cols();
   size_t rows();
   size_t data_width();
   size_t size();
   void close();
   double *data();
-
-  MatReader(const std::string &mat_file_name,
-            const std::vector<std::string> &arr, const std::string &field);
-  virtual ~MatReader();
 
 protected:
   // We use the PIMPL idiom to avoid having to include MATLAB headers into

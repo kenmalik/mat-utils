@@ -107,6 +107,9 @@ MatReader::MatReader(const std::string &mat_file_name,
 
 MatReader::~MatReader() = default;
 
+MatReader::MatReader(MatReader &&rhs) noexcept = default;
+MatReader &MatReader::operator=(MatReader &&rhs) noexcept = default;
+
 void MatReader::close() { impl.reset(); }
 
 size_t MatReader::cols() { return mxGetN(impl->A_ptr.get()); }
