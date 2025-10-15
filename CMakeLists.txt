@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(Mat_Utils VERSION 0.1.2)
+project(Mat_Utils VERSION 0.2.0)
 
 option(MAT_UTILS_BUILD_EXAMPLES OFF)
 
