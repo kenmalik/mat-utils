@@ -127,7 +127,11 @@ double *MatReader::data() { return mxGetDoubles(impl->A_ptr.get()); }
 MatSpReader::MatSpReader(const std::string &mat_file_name,
                          const std::vector<std::string> &arr,
                          const std::string &field)
-    : MatReader(mat_file_name, arr, field) {}
+    : MatReader(mat_file_name, arr, field) {
+  if (!mxIsSparse(impl->A_ptr.get())) {
+    throw std::invalid_argument("matrix is not sparse");
+  }
+}
 
 size_t *MatSpReader::jc() { return mxGetJc(impl->A_ptr.get()); }
 
