@@ -1,5 +1,4 @@
 #include <iostream>
-#include <memory>
 #include <stack>
 
 #include <mat.h>
@@ -110,7 +109,6 @@ void MatReader::close() {
     std::cerr << "Error closing mat file" << std::endl;
     exit(1);
   }
-  delete impl;
 }
 
 size_t MatReader::cols() { return mxGetN(impl->A_ptr.get()); }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -22,7 +23,7 @@ protected:
   // We use the PIMPL idiom to avoid having to include MATLAB headers into
   // application code
   struct MatReaderImpl;
-  MatReaderImpl *impl;
+  std::unique_ptr<MatReaderImpl> impl;
 };
 
 class MatSpReader : public MatReader {
