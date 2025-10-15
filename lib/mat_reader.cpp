@@ -143,4 +143,15 @@ size_t MatSpReader::ir_size() { return nnz(); }
 
 size_t MatSpReader::nnz() { return jc()[cols()]; }
 
+// Dense matrix reader
+
+MatDnReader::MatDnReader(const std::string &mat_file_name,
+                         const std::vector<std::string> &arr,
+                         const std::string &field)
+    : MatReader(mat_file_name, arr, field) {
+  if (mxIsSparse(impl->A_ptr.get())) {
+    throw std::invalid_argument("matrix is sparse");
+  }
+}
+
 } // namespace mat_utils

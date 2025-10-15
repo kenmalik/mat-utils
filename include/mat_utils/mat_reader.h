@@ -29,6 +29,12 @@ protected:
   std::unique_ptr<MatReaderImpl> impl;
 };
 
+class MatDnReader : public MatReader {
+public:
+  MatDnReader(const std::string &mat_file_name,
+              const std::vector<std::string> &arr, const std::string &field);
+};
+
 class MatSpReader : public MatReader {
 public:
   size_t *jc();
