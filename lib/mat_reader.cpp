@@ -124,7 +124,7 @@ double *MatReader::data() { return mxGetDoubles(impl->A_ptr.get()); }
 
 // Sparse matrix reader
 
-MatSpReader::MatSpReader(const std::string &mat_file_name,
+SpMatReader::SpMatReader(const std::string &mat_file_name,
                          const std::vector<std::string> &arr,
                          const std::string &field)
     : MatReader(mat_file_name, arr, field) {
@@ -133,19 +133,19 @@ MatSpReader::MatSpReader(const std::string &mat_file_name,
   }
 }
 
-size_t *MatSpReader::jc() { return mxGetJc(impl->A_ptr.get()); }
+size_t *SpMatReader::jc() { return mxGetJc(impl->A_ptr.get()); }
 
-size_t MatSpReader::jc_size() { return cols() + 1; }
+size_t SpMatReader::jc_size() { return cols() + 1; }
 
-size_t *MatSpReader::ir() { return mxGetIr(impl->A_ptr.get()); }
+size_t *SpMatReader::ir() { return mxGetIr(impl->A_ptr.get()); }
 
-size_t MatSpReader::ir_size() { return nnz(); }
+size_t SpMatReader::ir_size() { return nnz(); }
 
-size_t MatSpReader::nnz() { return jc()[cols()]; }
+size_t SpMatReader::nnz() { return jc()[cols()]; }
 
 // Dense matrix reader
 
-MatDnReader::MatDnReader(const std::string &mat_file_name,
+DnMatReader::DnMatReader(const std::string &mat_file_name,
                          const std::vector<std::string> &arr,
                          const std::string &field)
     : MatReader(mat_file_name, arr, field) {

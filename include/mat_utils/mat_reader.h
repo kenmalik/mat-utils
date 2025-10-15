@@ -29,13 +29,13 @@ protected:
   std::unique_ptr<MatReaderImpl> impl;
 };
 
-class MatDnReader : public MatReader {
+class DnMatReader : public MatReader {
 public:
-  MatDnReader(const std::string &mat_file_name,
+  DnMatReader(const std::string &mat_file_name,
               const std::vector<std::string> &arr, const std::string &field);
 };
 
-class MatSpReader : public MatReader {
+class SpMatReader : public MatReader {
 public:
   size_t *jc();
   size_t jc_size();
@@ -43,7 +43,7 @@ public:
   size_t ir_size();
   size_t nnz();
 
-  MatSpReader(const std::string &mat_file_name,
+  SpMatReader(const std::string &mat_file_name,
               const std::vector<std::string> &arr, const std::string &field);
 };
 
