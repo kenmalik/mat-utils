@@ -22,7 +22,7 @@ struct MatReader::MatReaderImpl {
 MatReader::MatReader(const std::string &mat_file_name,
                      const std::vector<std::string> &structs,
                      const std::string &field)
-    : impl(new MatReaderImpl()) {
+    : impl(std::make_unique<MatReaderImpl>()) {
   using namespace std::string_literals;
 
   std::stack<mxArrayPtr> open_structs{};
