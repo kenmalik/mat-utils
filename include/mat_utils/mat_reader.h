@@ -10,27 +10,32 @@ namespace mat_utils {
 struct MatReaderImpl;
 
 class MatReader {
-  public:
-    size_t *jc();
-    size_t jc_size();
-    size_t *ir();
-    size_t ir_size();
-    double *data();
-    size_t size();
+public:
+  size_t cols();
+  size_t rows();
+  size_t data_width();
+  size_t size();
+  void close();
+  double *data();
 
-    size_t cols();
-    size_t rows();
-    size_t nnz();
-    size_t data_width();
+  MatReader(const std::string &mat_file_name,
+            const std::vector<std::string> &arr, const std::string &field);
+  virtual ~MatReader();
 
-    void close();
+protected:
+  MatReaderImpl *impl;
+};
 
-    MatReader(const std::string &mat_file_name,
+class MatSpReader : public MatReader {
+public:
+  size_t *jc();
+  size_t jc_size();
+  size_t *ir();
+  size_t ir_size();
+  size_t nnz();
+
+  MatSpReader(const std::string &mat_file_name,
               const std::vector<std::string> &arr, const std::string &field);
-    ~MatReader();
-
-  private:
-    MatReaderImpl *impl;
 };
 
 } // namespace mat_utils
