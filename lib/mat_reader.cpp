@@ -1,5 +1,5 @@
-#include <iostream>
 #include <stack>
+#include <stdexcept>
 
 #include <mat.h>
 #include <matrix.h>
