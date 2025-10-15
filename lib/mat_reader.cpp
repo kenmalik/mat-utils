@@ -121,7 +121,7 @@ size_t MatReader::data_width() { return mxGetElementSize(impl->A_ptr.get()); }
 
 size_t MatReader::size() { return mxGetNumberOfElements(impl->A_ptr.get()); }
 
-double *MatReader::data() { return mxGetPr(impl->A_ptr.get()); }
+double *MatReader::data() { return mxGetDoubles(impl->A_ptr.get()); }
 
 // Sparse matrix reader
 
