@@ -5,10 +5,6 @@
 
 namespace mat_utils {
 
-// We use the PIMPL idiom to avoid having to include MATLAB headers into
-// application code
-struct MatReaderImpl;
-
 class MatReader {
 public:
   size_t cols();
@@ -23,6 +19,9 @@ public:
   virtual ~MatReader();
 
 protected:
+  // We use the PIMPL idiom to avoid having to include MATLAB headers into
+  // application code
+  struct MatReaderImpl;
   MatReaderImpl *impl;
 };
 

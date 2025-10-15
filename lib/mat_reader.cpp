@@ -12,7 +12,7 @@ using mxArrayPtr = std::unique_ptr<mxArray, decltype(mxArray_deleter)>;
 
 namespace mat_utils {
 
-struct MatReaderImpl {
+struct MatReader::MatReaderImpl {
   MATFile *mat_file_ptr = nullptr;
   mxArrayPtr A_ptr{nullptr, mxArray_deleter};
 };
