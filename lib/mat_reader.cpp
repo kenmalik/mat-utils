@@ -40,12 +40,6 @@ MatReader::MatReader(const std::string &mat_file_name,
       throw std::invalid_argument("mxArray not found "s + field);
     }
 
-    mwSize rows = mxGetM(impl->A_ptr.get());
-    mwSize cols = mxGetN(impl->A_ptr.get());
-    if (rows != cols) {
-      throw std::invalid_argument("error reading SPD matrix: m != n");
-    }
-
     return;
   }
 
@@ -97,12 +91,6 @@ MatReader::MatReader(const std::string &mat_file_name,
   constexpr int INDEX = 0;
   mxArray *A = mxGetField(open_structs.top().get(), INDEX, field.c_str());
   impl->A_ptr.reset(mxDuplicateArray(A));
-
-  mwSize rows = mxGetM(impl->A_ptr.get());
-  mwSize cols = mxGetN(impl->A_ptr.get());
-  if (rows != cols) {
-    throw std::invalid_argument("error reading SPD matrix: m != n");
-  }
 }
 
 MatReader::~MatReader() = default;
