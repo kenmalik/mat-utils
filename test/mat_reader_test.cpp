@@ -6,7 +6,7 @@
 
 #include "mat_utils/mat_reader.h"
 
-std::filesystem::path data = TEST_DATA_DIR;
+const std::filesystem::path data = TEST_DATA_DIR;
 
 TEST(MatReaderTest, ReadDense) {
     mat_utils::DnMatReader reader{data / "5x5_dense_incrementing.mat", {}, "A"};
