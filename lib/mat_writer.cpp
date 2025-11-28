@@ -48,21 +48,4 @@ void MatWriter::write_dense(const std::string &name,
     }
 }
 
-void MatWriter::write_dense(const std::string &name,
-                            const std::vector<double> &matrix, size_t rows,
-                            size_t cols) {
-    mxArray *pArr = mxCreateNumericMatrix(rows, cols, mxDOUBLE_CLASS, mxREAL);
-    if (pArr == NULL) {
-        throw std::runtime_error("Error creating double matrix");
-    }
-
-    double *data = static_cast<double *>(mxGetData(pArr));
-    std::copy(matrix.begin(), matrix.end(), data);
-
-    if (matPutVariable(impl->mat_file, name.c_str(), pArr) != 0) {
-        mxDestroyArray(pArr);
-        throw std::runtime_error("Error writing matrix '" + name + "' to file");
-    }
-}
-
 } // namespace mat_utils

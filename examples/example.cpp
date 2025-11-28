@@ -31,10 +31,6 @@ int main(int argc, char const *argv[]) {
     std::cout << "nnz: " << mat.nnz() << std::endl;
 
     std::vector<float> A(3 * 3, 10);
-    mat_utils::MatWriter w_A("A.mat");
-    w_A.write_dense("A", A, 3, 3);
-
-    std::vector<double> B(3 * 3, 10);
-    mat_utils::MatWriter w_B("B.mat");
-    w_B.write_dense("B", B, 3, 3);
+    mat_utils::MatWriter w("test_mat.mat");
+    w.write_dense("A", A, 3, 3);
 }
