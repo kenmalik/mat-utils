@@ -1,0 +1,8 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+find_dependency(Matlab REQUIRED MAT_LIBRARY MX_LIBRARY)
+
+include("${CMAKE_CURRENT_LIST_DIR}/MatUtilsTargets.cmake")
+
+check_required_components(MatUtils)

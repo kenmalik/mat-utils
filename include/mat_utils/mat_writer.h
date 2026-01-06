@@ -21,6 +21,9 @@ class MatWriter {
     void write_dense(const std::string &name, const std::vector<float> &matrix,
                      size_t rows, size_t cols);
 
+    void write_dense(const std::string &name, const std::vector<double> &matrix,
+                     size_t rows, size_t cols);
+
   private:
     MatWriterImpl *impl;
 };
