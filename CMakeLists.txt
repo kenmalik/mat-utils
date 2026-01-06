@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(MatUtils VERSION 0.2.2)
 
 option(MAT_UTILS_BUILD_EXAMPLES OFF)
+option(MAT_UTILS_BUILD_TESTS OFF)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -23,4 +24,8 @@ install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 if(MAT_UTILS_BUILD_EXAMPLES)
     add_subdirectory("examples")
+endif()
+
+if(MAT_UTILS_BUILD_TESTS)
+    add_subdirectory("test")
 endif()
