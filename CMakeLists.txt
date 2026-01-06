@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(Mat_Utils VERSION 0.2.1)
+project(MatUtils VERSION 0.2.1)
 
 option(MAT_UTILS_BUILD_EXAMPLES OFF)
 
@@ -7,6 +7,19 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_subdirectory("lib")
+
+include(GNUInstallDirs)
+
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+    cmake/MatUtilsConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/MatUtilsConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/MatUtils
+)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/MatUtilsConfig.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/MatUtils)
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 if(MAT_UTILS_BUILD_EXAMPLES)
     add_subdirectory("examples")
