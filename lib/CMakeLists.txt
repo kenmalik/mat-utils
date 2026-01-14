@@ -1,4 +1,5 @@
 add_library(mat_utils "mat_reader.cpp" "mat_writer.cpp")
+add_library(MatUtils::mat_utils ALIAS mat_utils)
 
 target_include_directories(mat_utils PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
