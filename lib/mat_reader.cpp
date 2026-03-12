@@ -101,15 +101,19 @@ MatReader &MatReader::operator=(MatReader &&rhs) noexcept = default;
 
 void MatReader::close() { impl.reset(); }
 
-size_t MatReader::cols() { return mxGetN(impl->A_ptr.get()); }
+size_t MatReader::cols() const { return mxGetN(impl->A_ptr.get()); }
 
-size_t MatReader::rows() { return mxGetM(impl->A_ptr.get()); }
+size_t MatReader::rows() const { return mxGetM(impl->A_ptr.get()); }
 
-size_t MatReader::data_width() { return mxGetElementSize(impl->A_ptr.get()); }
+size_t MatReader::data_width() const {
+    return mxGetElementSize(impl->A_ptr.get());
+}
 
-size_t MatReader::size() { return mxGetNumberOfElements(impl->A_ptr.get()); }
+size_t MatReader::size() const {
+    return mxGetNumberOfElements(impl->A_ptr.get());
+}
 
-double *MatReader::data() { return mxGetDoubles(impl->A_ptr.get()); }
+double *MatReader::data() const { return mxGetDoubles(impl->A_ptr.get()); }
 
 // Sparse matrix reader
 
@@ -122,15 +126,15 @@ SpMatReader::SpMatReader(const std::string &mat_file_name,
     }
 }
 
-size_t *SpMatReader::jc() { return mxGetJc(impl->A_ptr.get()); }
+size_t *SpMatReader::jc() const { return mxGetJc(impl->A_ptr.get()); }
 
-size_t SpMatReader::jc_size() { return cols() + 1; }
+size_t SpMatReader::jc_size() const { return cols() + 1; }
 
-size_t *SpMatReader::ir() { return mxGetIr(impl->A_ptr.get()); }
+size_t *SpMatReader::ir() const { return mxGetIr(impl->A_ptr.get()); }
 
-size_t SpMatReader::ir_size() { return nnz(); }
+size_t SpMatReader::ir_size() const { return nnz(); }
 
-size_t SpMatReader::nnz() { return jc()[cols()]; }
+size_t SpMatReader::nnz() const { return jc()[cols()]; }
 
 // Dense matrix reader
 
