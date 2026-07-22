@@ -1,4 +1,4 @@
-add_library(mat_utils "mat_reader.cpp" "mat_writer.cpp")
+add_library(mat_utils "mat_writer.cpp")
 add_library(MatUtils::mat_utils ALIAS mat_utils)
 
 target_include_directories(mat_utils PUBLIC
@@ -6,9 +6,10 @@ target_include_directories(mat_utils PUBLIC
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 find_package(Matlab REQUIRED MAT_LIBRARY MX_LIBRARY)
-target_include_directories(mat_utils PRIVATE ${Matlab_INCLUDE_DIRS})
 
-target_link_libraries(mat_utils PRIVATE
+target_include_directories(mat_utils PUBLIC ${Matlab_INCLUDE_DIRS})
+
+target_link_libraries(mat_utils PUBLIC
     ${Matlab_MAT_LIBRARY}
     ${Matlab_MX_LIBRARY})
 
