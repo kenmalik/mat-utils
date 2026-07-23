@@ -1,18 +1,23 @@
 #pragma once
 
 #include "handles.h"
+#include "supported_type.h"
 
+#include <cstdint>
 #include <mat.h>
 #include <matrix.h>
 
 #include <cstddef>
+#include <format>
 #include <stack>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 namespace mat_utils {
+enum class Sparsity : std::uint8_t { Dense, Sparse };
 
+template <SupportedType T, Sparsity S = Sparsity::Dense>
 class [[nodiscard]] MatReader {
   public:
     MatReader(const std::string &mat_file_name,
@@ -20,8 +25,6 @@ class [[nodiscard]] MatReader {
         : mat_file{matOpen(mat_file_name.c_str(), "r"),
                    handles::close_mat_file} {
         using namespace std::string_literals;
-
-        std::stack<handles::mxArrayPtr> open_structs{};
 
         if (mat_file == nullptr) {
             throw std::runtime_error("Error opening file "s + mat_file_name);
@@ -34,12 +37,95 @@ class [[nodiscard]] MatReader {
             if (A_ptr.get() == nullptr) {
                 throw std::invalid_argument("mxArray not found "s + field);
             }
+        } else {
+            handles::mxArrayPtr last_struct = open_last_struct(structs);
 
-            return;
+            if (mxGetFieldNumber(last_struct.get(), field.c_str()) == -1) {
+                throw std::invalid_argument("field not found: "s + field);
+            }
+
+            constexpr int INDEX = 0;
+            mxArray *arr = mxGetField(last_struct.get(), INDEX, field.c_str());
+            A_ptr.reset(mxDuplicateArray(arr));
         }
 
-        auto structs_iter = structs.begin();
-        if (structs_iter != structs.end()) {
+        validate_precision(field);
+        validate_sparsity(field);
+    }
+
+    MatReader(const MatReader &) = delete;
+    MatReader &operator=(const MatReader &) = delete;
+
+    MatReader(MatReader &&rhs) noexcept = default;
+    MatReader &operator=(MatReader &&rhs) noexcept = default;
+
+    ~MatReader() = default;
+
+    void close() {
+        A_ptr.reset();
+        mat_file.reset();
+    }
+
+    [[nodiscard]] std::size_t cols() const { return mxGetN(A_ptr.get()); }
+
+    [[nodiscard]] std::size_t rows() const { return mxGetM(A_ptr.get()); }
+
+    [[nodiscard]] std::size_t data_width() const {
+        return mxGetElementSize(A_ptr.get());
+    }
+
+    [[nodiscard]] std::size_t size() const {
+        return mxGetNumberOfElements(A_ptr.get());
+    }
+
+    [[nodiscard]] T *data() const { return mxGetDoubles(A_ptr.get()); }
+
+    [[nodiscard]] bool is_sparse() const { return mxIsSparse(A_ptr.get()); }
+
+    // Sparse methods
+
+    [[nodiscard]] std::size_t *jc() const
+        requires(S == Sparsity::Sparse)
+    {
+        return mxGetJc(A_ptr.get());
+    }
+
+    [[nodiscard]] std::size_t jc_size() const
+        requires(S == Sparsity::Sparse)
+    {
+        return cols() + 1;
+    }
+
+    [[nodiscard]] std::size_t *ir() const
+        requires(S == Sparsity::Sparse)
+    {
+        return mxGetIr(A_ptr.get());
+    }
+
+    [[nodiscard]] std::size_t ir_size() const
+        requires(S == Sparsity::Sparse)
+    {
+        return nnz();
+    }
+
+    [[nodiscard]] std::size_t nnz() const
+        requires(S == Sparsity::Sparse)
+    {
+        return jc()[cols()];
+    }
+
+  private:
+    handles::MATFilePtr mat_file;
+    handles::mxArrayPtr A_ptr{nullptr, handles::destroy_mxArray};
+
+    handles::mxArrayPtr
+    open_last_struct(const std::vector<std::string> &structs) {
+        using namespace std::string_literals;
+
+        std::stack<handles::mxArrayPtr> open_structs{};
+
+        auto structs_iter = structs.cbegin();
+        if (structs_iter != structs.cend()) {
             auto arr = *structs_iter;
 
             handles::mxArrayPtr mat_variable{
@@ -80,75 +166,36 @@ class [[nodiscard]] MatReader {
             open_structs.push(std::move(next_struct));
         }
 
-        auto *last_struct = open_structs.top().get();
-        if (mxGetFieldNumber(last_struct, field.c_str()) == -1) {
-            throw std::invalid_argument("field not found: "s + field);
-        }
-
-        constexpr int INDEX = 0;
-        mxArray *arr =
-            mxGetField(open_structs.top().get(), INDEX, field.c_str());
-        A_ptr.reset(mxDuplicateArray(arr));
+        return std::move(open_structs.top());
     }
 
-    MatReader(const MatReader &) = delete;
-    MatReader &operator=(const MatReader &) = delete;
-
-    MatReader(MatReader &&rhs) noexcept = default;
-    MatReader &operator=(MatReader &&rhs) noexcept = default;
-
-    virtual ~MatReader() = default;
-
-    [[nodiscard]] std::size_t cols() const { return mxGetN(A_ptr.get()); }
-    [[nodiscard]] std::size_t rows() const { return mxGetM(A_ptr.get()); }
-    [[nodiscard]] std::size_t data_width() const {
-        return mxGetElementSize(A_ptr.get());
-    }
-    [[nodiscard]] std::size_t size() const {
-        return mxGetNumberOfElements(A_ptr.get());
-    }
-    [[nodiscard]] double *data() const { return mxGetDoubles(A_ptr.get()); }
-
-    [[nodiscard]] bool is_sparse() const { return mxIsSparse(A_ptr.get()); }
-
-    void close() {
-        A_ptr.reset();
-        mat_file.reset();
-    }
-
-  private:
-    handles::MATFilePtr mat_file;
-
-  protected:
-    handles::mxArrayPtr A_ptr{nullptr, handles::destroy_mxArray}; // NOLINT
-};
-
-class DnMatReader : public MatReader {
-  public:
-    DnMatReader(const std::string &mat_file_name,
-                const std::vector<std::string> &arr, const std::string &field)
-        : MatReader(mat_file_name, arr, field) {
-        if (this->is_sparse()) {
-            throw std::invalid_argument("matrix is not dense");
-        }
-    }
-};
-
-class SpMatReader : public MatReader {
-  public:
-    SpMatReader(const std::string &mat_file_name,
-                const std::vector<std::string> &arr, const std::string &field)
-        : MatReader(mat_file_name, arr, field) {
-        if (!this->is_sparse()) {
-            throw std::invalid_argument("matrix is not sparse");
+    void validate_precision(const std::string &field) {
+        if constexpr (std::is_same_v<T, double>) {
+            if (!mxIsDouble(A_ptr.get())) {
+                throw std::invalid_argument{
+                    std::format("field '{}' is not double-precision", field)};
+            }
+        } else {
+            if (!mxIsSingle(A_ptr.get())) {
+                throw std::invalid_argument{
+                    std::format("field '{}' is not single-precision", field)};
+            }
         }
     }
 
-    [[nodiscard]] std::size_t *jc() const { return mxGetJc(A_ptr.get()); }
-    [[nodiscard]] std::size_t jc_size() const { return cols() + 1; }
-    [[nodiscard]] std::size_t *ir() const { return mxGetIr(A_ptr.get()); }
-    [[nodiscard]] std::size_t ir_size() const { return nnz(); }
-    [[nodiscard]] std::size_t nnz() const { return jc()[cols()]; } // NOLINT
+    void validate_sparsity(const std::string &field) {
+        if constexpr (S == Sparsity::Sparse) {
+            if (!mxIsSparse(A_ptr.get())) {
+                throw std::invalid_argument{
+                    std::format("field '{}' is not sparse", field)};
+            }
+        } else {
+            if (mxIsSparse(A_ptr.get())) {
+                throw std::invalid_argument{
+                    std::format("field '{}' is not dense", field)};
+            }
+        }
+    }
 };
 
 } // namespace mat_utils
