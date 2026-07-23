@@ -50,7 +50,7 @@ class [[nodiscard]] MatWriter {
         }
 
         auto *data = static_cast<float *>(mxGetData(pArr));
-        std::copy(matrix.begin(), matrix.end(), data);
+        std::ranges::copy(matrix, data);
 
         if (matPutVariable(mat_file.get(), name.c_str(), pArr) != 0) {
             mxDestroyArray(pArr);
@@ -68,7 +68,7 @@ class [[nodiscard]] MatWriter {
         }
 
         auto *data = static_cast<double *>(mxGetData(pArr));
-        std::copy(matrix.begin(), matrix.end(), data);
+        std::ranges::copy(matrix, data);
 
         if (matPutVariable(mat_file.get(), name.c_str(), pArr) != 0) {
             mxDestroyArray(pArr);
