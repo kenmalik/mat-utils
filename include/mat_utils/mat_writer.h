@@ -15,19 +15,25 @@ class MatWriter {
   public:
     MatWriter() = delete;
 
-    MatWriter(const std::string &mat_path) {
-        mat_file = matOpen(mat_path.c_str(), "w");
-        if (mat_file == NULL) {
+    MatWriter(const std::string &mat_path)
+        : mat_file{matOpen(mat_path.c_str(), "w")} {
+
+        if (mat_file == nullptr) {
             throw std::runtime_error("Error opening mat file");
         }
     }
 
+    MatWriter(const MatWriter &) = default;
+    MatWriter(MatWriter &&) = delete;
+    MatWriter &operator=(const MatWriter &) = default;
+    MatWriter &operator=(MatWriter &&) = delete;
+
     ~MatWriter() { close(); }
 
     void close() {
-        if (mat_file) {
+        if (mat_file != nullptr) {
             if (matClose(mat_file) != 0) {
-                std::cerr << "Error closing mat file" << std::endl;
+                std::cerr << "Error closing mat file\n";
                 exit(1);
             }
             mat_file = nullptr;
@@ -38,11 +44,11 @@ class MatWriter {
                      size_t rows, size_t cols) {
         mxArray *pArr =
             mxCreateNumericMatrix(rows, cols, mxSINGLE_CLASS, mxREAL);
-        if (pArr == NULL) {
+        if (pArr == nullptr) {
             throw std::runtime_error("Error creating float matrix");
         }
 
-        float *data = static_cast<float *>(mxGetData(pArr));
+        auto *data = static_cast<float *>(mxGetData(pArr));
         std::copy(matrix.begin(), matrix.end(), data);
 
         if (matPutVariable(mat_file, name.c_str(), pArr) != 0) {
@@ -56,11 +62,11 @@ class MatWriter {
                      size_t rows, size_t cols) {
         mxArray *pArr =
             mxCreateNumericMatrix(rows, cols, mxDOUBLE_CLASS, mxREAL);
-        if (pArr == NULL) {
+        if (pArr == nullptr) {
             throw std::runtime_error("Error creating double matrix");
         }
 
-        double *data = static_cast<double *>(mxGetData(pArr));
+        auto *data = static_cast<double *>(mxGetData(pArr));
         std::copy(matrix.begin(), matrix.end(), data);
 
         if (matPutVariable(mat_file, name.c_str(), pArr) != 0) {
