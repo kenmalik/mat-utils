@@ -8,8 +8,10 @@
 
 const std::filesystem::path data = TEST_DATA_DIR;
 
-TEST(MatReaderTest, ReadDense) {
+TEST(MatReaderTest, ReadDenseDouble) {
     mat_utils::MatReader reader{data / "5x5_dense_incrementing.mat", {}, "A"};
+    EXPECT_FALSE(reader.is_sparse());
+    EXPECT_TRUE(reader.is_double());
 
     constexpr int mat_size = 25;
     std::vector<int> expected(mat_size);
@@ -21,7 +23,26 @@ TEST(MatReaderTest, ReadDense) {
     std::vector<int> got(reader.values<double>().begin(),
                          reader.values<double>().end());
 
-    ASSERT_EQ(expected, got);
+    EXPECT_EQ(expected, got);
+}
+
+TEST(MatReaderTest, ReadDenseSingle) {
+    mat_utils::MatReader reader{
+        data / "5x5_dense_incrementing_single.mat", {}, "A"};
+    EXPECT_FALSE(reader.is_sparse());
+    EXPECT_FALSE(reader.is_double());
+
+    constexpr int mat_size = 25;
+    std::vector<int> expected(mat_size);
+    int new_val = 1;
+    for (auto &val : expected) {
+        val = new_val++;
+    }
+
+    std::vector<int> got(reader.values<float>().begin(),
+                         reader.values<float>().end());
+
+    EXPECT_EQ(expected, got);
 }
 
 TEST(MatReaderTest, ReadDenseFailsOnSparse) {
@@ -32,9 +53,11 @@ TEST(MatReaderTest, ReadDenseFailsOnSparse) {
     ASSERT_THROW(construct(), std::invalid_argument);
 }
 
-TEST(MatReaderTest, ReadSparse) {
+TEST(MatReaderTest, ReadSparseDouble) {
     mat_utils::MatReader<mat_utils::Sparsity::Sparse> reader{
         data / "5x5_sparse_identity.mat", {}, "A"};
+    EXPECT_TRUE(reader.is_sparse());
+    EXPECT_TRUE(reader.is_double());
 
     std::vector<int> expected_data(5, 1); // NOLINT
     std::vector<int> expected_ir(5);      // NOLINT
@@ -57,9 +80,41 @@ TEST(MatReaderTest, ReadSparse) {
     std::vector<int> got_column_pointers(reader.column_pointers().begin(),
                                          reader.column_pointers().end());
 
-    ASSERT_EQ(expected_data, got_data);
-    ASSERT_EQ(expected_ir, got_row_indices);
-    ASSERT_EQ(expected_jc, got_column_pointers);
+    EXPECT_EQ(expected_data, got_data);
+    EXPECT_EQ(expected_ir, got_row_indices);
+    EXPECT_EQ(expected_jc, got_column_pointers);
+}
+
+TEST(MatReaderTest, ReadSparseSingle) {
+    mat_utils::MatReader<mat_utils::Sparsity::Sparse> reader{
+        data / "5x5_sparse_identity_single.mat", {}, "A"};
+    EXPECT_TRUE(reader.is_sparse());
+    EXPECT_FALSE(reader.is_double());
+
+    std::vector<int> expected_data(5, 1); // NOLINT
+    std::vector<int> expected_ir(5);      // NOLINT
+
+    int new_val = 0;
+    for (auto &val : expected_ir) {
+        val = new_val++;
+    }
+
+    std::vector<int> expected_jc(6); // NOLINT
+    new_val = 0;
+    for (auto &val : expected_jc) {
+        val = new_val++;
+    }
+
+    std::vector<int> got_data(reader.values<float>().begin(),
+                              reader.values<float>().end());
+    std::vector<int> got_row_indices(reader.row_indices().begin(),
+                                     reader.row_indices().end());
+    std::vector<int> got_column_pointers(reader.column_pointers().begin(),
+                                         reader.column_pointers().end());
+
+    EXPECT_EQ(expected_data, got_data);
+    EXPECT_EQ(expected_ir, got_row_indices);
+    EXPECT_EQ(expected_jc, got_column_pointers);
 }
 
 TEST(MatReaderTest, ReadSparseFailsOnDense) {
