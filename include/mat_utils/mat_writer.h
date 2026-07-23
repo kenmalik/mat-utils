@@ -7,7 +7,6 @@
 
 #include <algorithm>
 #include <format>
-#include <iostream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -18,10 +17,11 @@ class [[nodiscard]] MatWriter {
   public:
     MatWriter() = delete;
 
-    explicit MatWriter(const std::string &mat_path)
-        : mat_file{matOpen(mat_path.c_str(), "w"), handles::close_mat_file} {
+    explicit MatWriter(const std::string &filename)
+        : mat_file{matOpen(filename.c_str(), "w"), handles::close_mat_file} {
         if (mat_file == nullptr) {
-            throw std::runtime_error("Error opening mat file");
+            throw std::runtime_error(
+                std::format("Error opening file '{}'", filename));
         }
     }
 
@@ -30,17 +30,9 @@ class [[nodiscard]] MatWriter {
     MatWriter(MatWriter &&) = delete;
     MatWriter &operator=(MatWriter &&) = delete;
 
-    ~MatWriter() { close(); }
+    ~MatWriter() = default;
 
-    void close() {
-        if (mat_file != nullptr) {
-            if (matClose(mat_file.get()) != 0) {
-                std::cerr << "Error closing mat file\n";
-                exit(1);
-            }
-            mat_file = nullptr;
-        }
-    }
+    void close() { mat_file.reset(); }
 
     void write_dense(const std::string &name, const std::vector<float> &matrix,
                      size_t rows, size_t cols) {
@@ -62,17 +54,17 @@ class [[nodiscard]] MatWriter {
 
     void write_dense(const std::string &name, const std::vector<double> &matrix,
                      size_t rows, size_t cols) {
-        mxArray *pArr =
-            mxCreateNumericMatrix(rows, cols, mxDOUBLE_CLASS, mxREAL);
+        handles::mxArrayPtr pArr{
+            mxCreateNumericMatrix(rows, cols, mxDOUBLE_CLASS, mxREAL),
+            handles::destroy_mxArray};
         if (pArr == nullptr) {
             throw std::runtime_error("Error creating double matrix");
         }
 
-        auto *data = static_cast<double *>(mxGetData(pArr));
+        auto *data = static_cast<double *>(mxGetData(pArr.get()));
         std::ranges::copy(matrix, data);
 
-        if (matPutVariable(mat_file.get(), name.c_str(), pArr) != 0) {
-            mxDestroyArray(pArr);
+        if (matPutVariable(mat_file.get(), name.c_str(), pArr.get()) != 0) {
             throw std::runtime_error(
                 std::format("Error writing matrix '{}' to file", name));
         }
