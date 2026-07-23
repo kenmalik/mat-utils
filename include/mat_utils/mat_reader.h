@@ -1,13 +1,13 @@
 #pragma once
 
+#include <mat.h>
+#include <matrix.h>
+
 #include <memory>
 #include <stack>
 #include <stdexcept>
 #include <string>
 #include <vector>
-
-#include <mat.h>
-#include <matrix.h>
 
 namespace mat_utils {
 
@@ -24,23 +24,22 @@ using MATFilePtr = std::unique_ptr<MATFile, decltype(&close_mat_file)>;
 class MatReader {
   public:
     MatReader(const std::string &mat_file_name,
-              const std::vector<std::string> &structs, const std::string &field)
-        : impl(std::make_unique<MatReaderImpl>()) {
+              const std::vector<std::string> &structs,
+              const std::string &field) {
         using namespace std::string_literals;
 
         std::stack<detail::mxArrayPtr> open_structs{};
 
-        impl->mat_file_ptr.reset(matOpen(mat_file_name.c_str(), "r"));
-        if (impl->mat_file_ptr == NULL) {
+        mat_file_ptr.reset(matOpen(mat_file_name.c_str(), "r"));
+        if (mat_file_ptr == NULL) {
             throw std::runtime_error("Error opening file "s + mat_file_name);
         }
 
         if (structs.empty()) {
-            mxArray *A =
-                matGetVariable(impl->mat_file_ptr.get(), field.c_str());
-            impl->A_ptr.reset(mxDuplicateArray(A));
+            mxArray *A = matGetVariable(mat_file_ptr.get(), field.c_str());
+            A_ptr.reset(mxDuplicateArray(A));
 
-            if (impl->A_ptr.get() == NULL) {
+            if (A_ptr.get() == NULL) {
                 throw std::invalid_argument("mxArray not found "s + field);
             }
 
@@ -52,7 +51,7 @@ class MatReader {
             auto arr = *structs_iter;
 
             detail::mxArrayPtr mat_variable{
-                matGetVariable(impl->mat_file_ptr.get(), arr.c_str()),
+                matGetVariable(mat_file_ptr.get(), arr.c_str()),
                 detail::destroy_mxArray};
             if (mat_variable.get() == NULL) {
                 throw std::invalid_argument("mxArray not found "s + arr);
@@ -96,7 +95,7 @@ class MatReader {
 
         constexpr int INDEX = 0;
         mxArray *A = mxGetField(open_structs.top().get(), INDEX, field.c_str());
-        impl->A_ptr.reset(mxDuplicateArray(A));
+        A_ptr.reset(mxDuplicateArray(A));
     }
 
     virtual ~MatReader() = default;
@@ -104,19 +103,19 @@ class MatReader {
     MatReader(MatReader &&rhs) noexcept = default;
     MatReader &operator=(MatReader &&rhs) noexcept = default;
 
-    size_t cols() const { return mxGetN(impl->A_ptr.get()); }
-    size_t rows() const { return mxGetM(impl->A_ptr.get()); }
-    size_t data_width() const { return mxGetElementSize(impl->A_ptr.get()); }
-    size_t size() const { return mxGetNumberOfElements(impl->A_ptr.get()); }
-    void close() { impl.reset(); }
-    double *data() const { return mxGetDoubles(impl->A_ptr.get()); }
+    size_t cols() const { return mxGetN(A_ptr.get()); }
+    size_t rows() const { return mxGetM(A_ptr.get()); }
+    size_t data_width() const { return mxGetElementSize(A_ptr.get()); }
+    size_t size() const { return mxGetNumberOfElements(A_ptr.get()); }
+    void close() {
+        A_ptr.reset();
+        mat_file_ptr.reset();
+    }
+    double *data() const { return mxGetDoubles(A_ptr.get()); }
 
   protected:
-    struct MatReaderImpl {
-        detail::MATFilePtr mat_file_ptr{nullptr, detail::close_mat_file};
-        detail::mxArrayPtr A_ptr{nullptr, detail::destroy_mxArray};
-    };
-    std::unique_ptr<MatReaderImpl> impl;
+    detail::MATFilePtr mat_file_ptr{nullptr, detail::close_mat_file};
+    detail::mxArrayPtr A_ptr{nullptr, detail::destroy_mxArray};
 };
 
 class DnMatReader : public MatReader {
@@ -124,7 +123,7 @@ class DnMatReader : public MatReader {
     DnMatReader(const std::string &mat_file_name,
                 const std::vector<std::string> &arr, const std::string &field)
         : MatReader(mat_file_name, arr, field) {
-        if (mxIsSparse(impl->A_ptr.get())) {
+        if (mxIsSparse(A_ptr.get())) {
             throw std::invalid_argument("matrix is sparse");
         }
     }
@@ -132,16 +131,16 @@ class DnMatReader : public MatReader {
 
 class SpMatReader : public MatReader {
   public:
-    size_t *jc() const { return mxGetJc(impl->A_ptr.get()); }
+    size_t *jc() const { return mxGetJc(A_ptr.get()); }
     size_t jc_size() const { return cols() + 1; }
-    size_t *ir() const { return mxGetIr(impl->A_ptr.get()); }
+    size_t *ir() const { return mxGetIr(A_ptr.get()); }
     size_t ir_size() const { return nnz(); }
     size_t nnz() const { return jc()[cols()]; }
 
     SpMatReader(const std::string &mat_file_name,
                 const std::vector<std::string> &arr, const std::string &field)
         : MatReader(mat_file_name, arr, field) {
-        if (!mxIsSparse(impl->A_ptr.get())) {
+        if (!mxIsSparse(A_ptr.get())) {
             throw std::invalid_argument("matrix is not sparse");
         }
     }

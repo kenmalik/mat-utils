@@ -1,14 +1,13 @@
 #pragma once
 
+#include <mat.h>
+#include <matrix.h>
+
 #include <algorithm>
 #include <iostream>
-#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
-
-#include <mat.h>
-#include <matrix.h>
 
 namespace mat_utils {
 
@@ -16,10 +15,9 @@ class MatWriter {
   public:
     MatWriter() = delete;
 
-    MatWriter(const std::string &mat_path)
-        : impl(std::make_unique<MatWriterImpl>()) {
-        impl->mat_file = matOpen(mat_path.c_str(), "w");
-        if (impl->mat_file == NULL) {
+    MatWriter(const std::string &mat_path) {
+        mat_file = matOpen(mat_path.c_str(), "w");
+        if (mat_file == NULL) {
             throw std::runtime_error("Error opening mat file");
         }
     }
@@ -27,12 +25,12 @@ class MatWriter {
     ~MatWriter() { close(); }
 
     void close() {
-        if (impl) {
-            if (matClose(impl->mat_file) != 0) {
+        if (mat_file) {
+            if (matClose(mat_file) != 0) {
                 std::cerr << "Error closing mat file" << std::endl;
                 exit(1);
             }
-            impl.reset();
+            mat_file = nullptr;
         }
     }
 
@@ -47,7 +45,7 @@ class MatWriter {
         float *data = static_cast<float *>(mxGetData(pArr));
         std::copy(matrix.begin(), matrix.end(), data);
 
-        if (matPutVariable(impl->mat_file, name.c_str(), pArr) != 0) {
+        if (matPutVariable(mat_file, name.c_str(), pArr) != 0) {
             mxDestroyArray(pArr);
             throw std::runtime_error("Error writing matrix '" + name +
                                      "' to file");
@@ -65,7 +63,7 @@ class MatWriter {
         double *data = static_cast<double *>(mxGetData(pArr));
         std::copy(matrix.begin(), matrix.end(), data);
 
-        if (matPutVariable(impl->mat_file, name.c_str(), pArr) != 0) {
+        if (matPutVariable(mat_file, name.c_str(), pArr) != 0) {
             mxDestroyArray(pArr);
             throw std::runtime_error("Error writing matrix '" + name +
                                      "' to file");
@@ -73,10 +71,7 @@ class MatWriter {
     }
 
   private:
-    struct MatWriterImpl {
-        MATFile *mat_file = nullptr;
-    };
-    std::unique_ptr<MatWriterImpl> impl;
+    MATFile *mat_file = nullptr;
 };
 
 } // namespace mat_utils
