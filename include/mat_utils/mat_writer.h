@@ -1,5 +1,7 @@
 #pragma once
 
+#include "handles.h"
+
 #include <mat.h>
 #include <matrix.h>
 
@@ -15,24 +17,23 @@ class [[nodiscard]] MatWriter {
   public:
     MatWriter() = delete;
 
-    MatWriter(const std::string &mat_path)
-        : mat_file{matOpen(mat_path.c_str(), "w")} {
-
+    explicit MatWriter(const std::string &mat_path)
+        : mat_file{matOpen(mat_path.c_str(), "w"), handles::close_mat_file} {
         if (mat_file == nullptr) {
             throw std::runtime_error("Error opening mat file");
         }
     }
 
-    MatWriter(const MatWriter &) = default;
+    MatWriter(const MatWriter &) = delete;
+    MatWriter &operator=(const MatWriter &) = delete;
     MatWriter(MatWriter &&) = delete;
-    MatWriter &operator=(const MatWriter &) = default;
     MatWriter &operator=(MatWriter &&) = delete;
 
     ~MatWriter() { close(); }
 
     void close() {
         if (mat_file != nullptr) {
-            if (matClose(mat_file) != 0) {
+            if (matClose(mat_file.get()) != 0) {
                 std::cerr << "Error closing mat file\n";
                 exit(1);
             }
@@ -51,7 +52,7 @@ class [[nodiscard]] MatWriter {
         auto *data = static_cast<float *>(mxGetData(pArr));
         std::copy(matrix.begin(), matrix.end(), data);
 
-        if (matPutVariable(mat_file, name.c_str(), pArr) != 0) {
+        if (matPutVariable(mat_file.get(), name.c_str(), pArr) != 0) {
             mxDestroyArray(pArr);
             throw std::runtime_error("Error writing matrix '" + name +
                                      "' to file");
@@ -69,7 +70,7 @@ class [[nodiscard]] MatWriter {
         auto *data = static_cast<double *>(mxGetData(pArr));
         std::copy(matrix.begin(), matrix.end(), data);
 
-        if (matPutVariable(mat_file, name.c_str(), pArr) != 0) {
+        if (matPutVariable(mat_file.get(), name.c_str(), pArr) != 0) {
             mxDestroyArray(pArr);
             throw std::runtime_error("Error writing matrix '" + name +
                                      "' to file");
@@ -77,7 +78,7 @@ class [[nodiscard]] MatWriter {
     }
 
   private:
-    MATFile *mat_file = nullptr;
+    handles::MATFilePtr mat_file;
 };
 
 } // namespace mat_utils

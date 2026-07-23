@@ -1,10 +1,11 @@
 #pragma once
 
+#include "handles.h"
+
 #include <mat.h>
 #include <matrix.h>
 
 #include <cstddef>
-#include <memory>
 #include <stack>
 #include <stdexcept>
 #include <string>
@@ -12,32 +13,22 @@
 
 namespace mat_utils {
 
-namespace detail {
-
-inline void destroy_mxArray(mxArray *ptr) { mxDestroyArray(ptr); }
-using mxArrayPtr = std::unique_ptr<mxArray, decltype(&destroy_mxArray)>;
-
-inline void close_mat_file(MATFile *ptr) { matClose(ptr); }
-using MATFilePtr = std::unique_ptr<MATFile, decltype(&close_mat_file)>;
-
-} // namespace detail
-
 class [[nodiscard]] MatReader {
   public:
     MatReader(const std::string &mat_file_name,
-              const std::vector<std::string> &structs,
-              const std::string &field) {
+              const std::vector<std::string> &structs, const std::string &field)
+        : mat_file{matOpen(mat_file_name.c_str(), "r"),
+                   handles::close_mat_file} {
         using namespace std::string_literals;
 
-        std::stack<detail::mxArrayPtr> open_structs{};
+        std::stack<handles::mxArrayPtr> open_structs{};
 
-        mat_file_ptr.reset(matOpen(mat_file_name.c_str(), "r"));
-        if (mat_file_ptr == nullptr) {
+        if (mat_file == nullptr) {
             throw std::runtime_error("Error opening file "s + mat_file_name);
         }
 
         if (structs.empty()) {
-            mxArray *arr = matGetVariable(mat_file_ptr.get(), field.c_str());
+            mxArray *arr = matGetVariable(mat_file.get(), field.c_str());
             A_ptr.reset(mxDuplicateArray(arr));
 
             if (A_ptr.get() == nullptr) {
@@ -51,9 +42,9 @@ class [[nodiscard]] MatReader {
         if (structs_iter != structs.end()) {
             auto arr = *structs_iter;
 
-            detail::mxArrayPtr mat_variable{
-                matGetVariable(mat_file_ptr.get(), arr.c_str()),
-                detail::destroy_mxArray};
+            handles::mxArrayPtr mat_variable{
+                matGetVariable(mat_file.get(), arr.c_str()),
+                handles::destroy_mxArray};
             if (mat_variable.get() == nullptr) {
                 throw std::invalid_argument("mxArray not found "s + arr);
             }
@@ -75,9 +66,9 @@ class [[nodiscard]] MatReader {
             }
 
             constexpr int INDEX = 0;
-            detail::mxArrayPtr next_struct{
+            handles::mxArrayPtr next_struct{
                 mxGetField(current, INDEX, arr.c_str()),
-                detail::destroy_mxArray};
+                handles::destroy_mxArray};
             if (next_struct.get() == nullptr) {
                 throw std::invalid_argument("mxArray not found "s + arr);
             }
@@ -122,14 +113,14 @@ class [[nodiscard]] MatReader {
 
     void close() {
         A_ptr.reset();
-        mat_file_ptr.reset();
+        mat_file.reset();
     }
 
   private:
-    detail::MATFilePtr mat_file_ptr{nullptr, detail::close_mat_file};
+    handles::MATFilePtr mat_file;
 
   protected:
-    detail::mxArrayPtr A_ptr{nullptr, detail::destroy_mxArray}; // NOLINT
+    handles::mxArrayPtr A_ptr{nullptr, handles::destroy_mxArray}; // NOLINT
 };
 
 class DnMatReader : public MatReader {
