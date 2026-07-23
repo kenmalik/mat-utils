@@ -18,8 +18,7 @@
 namespace mat_utils {
 enum class Sparsity : std::uint8_t { Dense, Sparse };
 
-template <SupportedType T, Sparsity S = Sparsity::Dense>
-class [[nodiscard]] MatReader {
+template <Sparsity S = Sparsity::Dense> class [[nodiscard]] MatReader {
   public:
     MatReader(const std::string &mat_file_name,
               const std::vector<std::string> &structs, const std::string &field)
@@ -51,7 +50,6 @@ class [[nodiscard]] MatReader {
             A_ptr.reset(mxDuplicateArray(arr));
         }
 
-        validate_precision(field);
         validate_sparsity(field);
     }
 
@@ -80,11 +78,26 @@ class [[nodiscard]] MatReader {
         return mxGetNumberOfElements(A_ptr.get());
     }
 
-    [[nodiscard]] std::span<T> values() const {
+    template <SupportedType T> [[nodiscard]] std::span<T> values() const {
+        std::size_t length = 0;
+
         if constexpr (S == Sparsity::Sparse) {
-            return {mxGetDoubles(A_ptr.get()), nonzero_count()};
+            length = nonzero_count();
+        } else {
+            length = size();
         }
-        return {mxGetDoubles(A_ptr.get()), size()};
+
+        if constexpr (std::is_same_v<T, double>) {
+            if (!mxIsDouble(A_ptr.get())) {
+                throw std::invalid_argument{"values are not double-precision"};
+            }
+            return {mxGetDoubles(A_ptr.get()), length};
+        } else {
+            if (!mxIsSingle(A_ptr.get())) {
+                throw std::invalid_argument{"values are not single-precision"};
+            }
+            return {mxGetSingles(A_ptr.get()), length};
+        }
     }
 
     [[nodiscard]] bool is_sparse() const { return mxIsSparse(A_ptr.get()); }
@@ -163,20 +176,6 @@ class [[nodiscard]] MatReader {
         }
 
         return std::move(open_structs.top());
-    }
-
-    void validate_precision(const std::string &field) {
-        if constexpr (std::is_same_v<T, double>) {
-            if (!mxIsDouble(A_ptr.get())) {
-                throw std::invalid_argument{
-                    std::format("field '{}' is not double-precision", field)};
-            }
-        } else {
-            if (!mxIsSingle(A_ptr.get())) {
-                throw std::invalid_argument{
-                    std::format("field '{}' is not single-precision", field)};
-            }
-        }
     }
 
     void validate_sparsity(const std::string &field) {

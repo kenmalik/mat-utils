@@ -7,8 +7,8 @@ int main(int argc, char const *argv[]) {
         std::cerr << "Invalid arguments\n";
         return 1;
     }
-    mat_utils::MatReader<double, mat_utils::Sparsity::Sparse> mat(
-        argv[1], {"Problem"}, "A"); // NOLINT
+    mat_utils::MatReader<mat_utils::Sparsity::Sparse> mat(argv[1], // NOLINT
+                                                          {"Problem"}, "A");
 
     std::cout << "jc: ";
     for (const auto val : mat.column_pointers()) {
@@ -24,7 +24,7 @@ int main(int argc, char const *argv[]) {
 
     std::cout << "jc: " << mat.column_pointers().data() << '\n';
     std::cout << "ir: " << mat.row_indices().data() << '\n';
-    std::cout << "data: " << mat.values().data() << '\n';
+    std::cout << "data: " << mat.values<double>().data() << '\n';
 
     std::cout << "cols: " << mat.cols() << '\n';
     std::cout << "rows: " << mat.rows() << '\n';
