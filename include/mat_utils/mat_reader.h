@@ -22,7 +22,7 @@ using MATFilePtr = std::unique_ptr<MATFile, decltype(&close_mat_file)>;
 
 } // namespace detail
 
-class MatReader {
+class [[nodiscard]] MatReader {
   public:
     MatReader(const std::string &mat_file_name,
               const std::vector<std::string> &structs,

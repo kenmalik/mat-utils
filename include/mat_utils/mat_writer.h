@@ -11,7 +11,7 @@
 
 namespace mat_utils {
 
-class MatWriter {
+class [[nodiscard]] MatWriter {
   public:
     MatWriter() = delete;
 
