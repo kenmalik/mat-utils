@@ -11,25 +11,27 @@ int main(int argc, char const *argv[]) {
         argv[1], {"Problem"}, "A"); // NOLINT
 
     std::cout << "jc: ";
-    for (auto *iter = mat.jc(); *iter < mat.jc_size(); ++iter) {
-        std::cout << *iter << ' ';
+    for (const auto val : mat.column_pointers()) {
+        std::cout << val << ' ';
     }
     std::cout << '\n';
 
     std::cout << "ir: ";
-    for (auto *iter = mat.ir(); *iter < mat.ir_size(); ++iter) {
-        std::cout << *iter << ' ';
+    for (const auto val : mat.row_indices()) {
+        std::cout << val << ' ';
     }
     std::cout << '\n';
 
-    std::cout << "jc: " << mat.jc() << '\n';
-    std::cout << "ir: " << mat.ir() << '\n';
-    std::cout << "data: " << mat.data() << '\n';
+    std::cout << "jc: " << mat.column_pointers().data() << '\n';
+    std::cout << "ir: " << mat.row_indices().data() << '\n';
+    std::cout << "data: " << mat.values().data() << '\n';
+
     std::cout << "cols: " << mat.cols() << '\n';
     std::cout << "rows: " << mat.rows() << '\n';
+
     std::cout << "data_width: " << mat.data_width() << '\n';
     std::cout << "size: " << mat.size() << '\n';
-    std::cout << "nnz: " << mat.nnz() << '\n';
+    std::cout << "nnz: " << mat.nonzero_count() << '\n';
 
     std::vector<float> A(3 * 3, 10); // NOLINT
     mat_utils::MatWriter w_A("A.mat");

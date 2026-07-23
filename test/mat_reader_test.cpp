@@ -2,7 +2,6 @@
 
 #include <gtest/gtest.h>
 
-#include <algorithm>
 #include <filesystem>
 #include <stdexcept>
 #include <vector>
@@ -20,8 +19,7 @@ TEST(MatReaderTest, ReadDense) {
         val = new_val++;
     }
 
-    std::vector<int> got(reader.size());
-    std::copy(reader.data(), reader.data() + reader.size(), got.data());
+    std::vector<int> got(reader.values().begin(), reader.values().end());
 
     ASSERT_EQ(expected, got);
 }
@@ -30,15 +28,6 @@ TEST(MatReaderTest, ReadDenseFailsOnSparse) {
     auto construct = [] {
         mat_utils::MatReader<double> reader(data / "5x5_sparse_identity.mat",
                                             {}, "A");
-    };
-
-    ASSERT_THROW(construct(), std::invalid_argument);
-}
-
-TEST(MatReaderTest, ReadSparseFailsOnDense) {
-    auto construct = [] {
-        mat_utils::MatReader<double, mat_utils::Sparsity::Sparse> reader(
-            data / "5x5_dense_incrementing.mat", {}, "A");
     };
 
     ASSERT_THROW(construct(), std::invalid_argument);
@@ -62,16 +51,24 @@ TEST(MatReaderTest, ReadSparse) {
         val = new_val++;
     }
 
-    std::vector<int> got_data(reader.nnz());
-    std::copy(reader.data(), reader.data() + reader.nnz(), got_data.data());
-    std::vector<int> got_ir(reader.ir_size());
-    std::copy(reader.ir(), reader.ir() + reader.ir_size(), got_ir.data());
-    std::vector<int> got_jc(reader.jc_size());
-    std::copy(reader.jc(), reader.jc() + reader.jc_size(), got_jc.data());
+    std::vector<int> got_data(reader.values().begin(), reader.values().end());
+    std::vector<int> got_row_indices(reader.row_indices().begin(),
+                                     reader.row_indices().end());
+    std::vector<int> got_column_pointers(reader.column_pointers().begin(),
+                                         reader.column_pointers().end());
 
     ASSERT_EQ(expected_data, got_data);
-    ASSERT_EQ(expected_ir, got_ir);
-    ASSERT_EQ(expected_jc, got_jc);
+    ASSERT_EQ(expected_ir, got_row_indices);
+    ASSERT_EQ(expected_jc, got_column_pointers);
+}
+
+TEST(MatReaderTest, ReadSparseFailsOnDense) {
+    auto construct = [] {
+        mat_utils::MatReader<double, mat_utils::Sparsity::Sparse> reader(
+            data / "5x5_dense_incrementing.mat", {}, "A");
+    };
+
+    ASSERT_THROW(construct(), std::invalid_argument);
 }
 
 TEST(MatReaderTest, ReadSingleFailsOnDouble) {

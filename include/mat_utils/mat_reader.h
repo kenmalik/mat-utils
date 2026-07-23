@@ -9,6 +9,7 @@
 
 #include <cstddef>
 #include <format>
+#include <span>
 #include <stack>
 #include <stdexcept>
 #include <string>
@@ -79,40 +80,31 @@ class [[nodiscard]] MatReader {
         return mxGetNumberOfElements(A_ptr.get());
     }
 
-    [[nodiscard]] T *data() const { return mxGetDoubles(A_ptr.get()); }
+    [[nodiscard]] std::span<T> values() const {
+        if constexpr (S == Sparsity::Sparse) {
+            return {mxGetDoubles(A_ptr.get()), nonzero_count()};
+        }
+        return {mxGetDoubles(A_ptr.get()), size()};
+    }
 
     [[nodiscard]] bool is_sparse() const { return mxIsSparse(A_ptr.get()); }
 
     // Sparse methods
 
-    [[nodiscard]] std::size_t *jc() const
-        requires(S == Sparsity::Sparse)
-    {
-        return mxGetJc(A_ptr.get());
+    [[nodiscard]] std::span<std::size_t> column_pointers() const {
+        return {mxGetJc(A_ptr.get()), column_pointer_count()};
     }
 
-    [[nodiscard]] std::size_t jc_size() const
+    [[nodiscard]] std::span<std::size_t> row_indices() const
         requires(S == Sparsity::Sparse)
     {
-        return cols() + 1;
+        return {mxGetIr(A_ptr.get()), row_index_count()};
     }
 
-    [[nodiscard]] std::size_t *ir() const
+    [[nodiscard]] std::size_t nonzero_count() const
         requires(S == Sparsity::Sparse)
     {
-        return mxGetIr(A_ptr.get());
-    }
-
-    [[nodiscard]] std::size_t ir_size() const
-        requires(S == Sparsity::Sparse)
-    {
-        return nnz();
-    }
-
-    [[nodiscard]] std::size_t nnz() const
-        requires(S == Sparsity::Sparse)
-    {
-        return jc()[cols()];
+        return column_pointers()[cols()];
     }
 
   private:
@@ -199,6 +191,18 @@ class [[nodiscard]] MatReader {
                     std::format("field '{}' is not dense", field)};
             }
         }
+    }
+
+    [[nodiscard]] std::size_t column_pointer_count() const
+        requires(S == Sparsity::Sparse)
+    {
+        return cols() + 1;
+    }
+
+    [[nodiscard]] std::size_t row_index_count() const
+        requires(S == Sparsity::Sparse)
+    {
+        return nonzero_count();
     }
 };
 
