@@ -102,6 +102,8 @@ template <Sparsity S = Sparsity::Dense> class [[nodiscard]] MatReader {
 
     [[nodiscard]] bool is_sparse() const { return mxIsSparse(A_ptr.get()); }
 
+    [[nodiscard]] bool is_double() const { return mxIsDouble(A_ptr.get()); }
+
     // Sparse methods
 
     [[nodiscard]] std::span<std::size_t> column_pointers() const {
