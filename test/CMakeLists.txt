@@ -32,5 +32,10 @@ target_compile_definitions(
     TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
 )
 
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_options(mat_reader_test PRIVATE -Wall -Wextra -Werror)
+endif()
+
 include(GoogleTest)
 gtest_discover_tests(mat_reader_test)

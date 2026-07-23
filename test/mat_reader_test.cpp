@@ -129,12 +129,14 @@ TEST(MatReaderTest, ReadSparseFailsOnDense) {
 TEST(MatReaderTest, ReadSingleFailsOnDouble) {
     mat_utils::MatReader reader{data / "5x5_dense_incrementing.mat", {}, "A"};
 
-    ASSERT_THROW(auto val = reader.values<float>(), std::invalid_argument);
+    // NOLINTNEXTLINE
+    ASSERT_THROW(auto _ = reader.values<float>(), std::invalid_argument);
 }
 
 TEST(MatReaderTest, ReadDoubleFailsOnSingle) {
     mat_utils::MatReader reader(data / "5x5_dense_incrementing_single.mat", {},
                                 "A");
 
-    ASSERT_THROW(auto val = reader.values<double>(), std::invalid_argument);
+    // NOLINTNEXTLINE
+    ASSERT_THROW(auto _ = reader.values<double>(), std::invalid_argument);
 }
