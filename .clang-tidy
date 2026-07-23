@@ -1,0 +1,13 @@
+Checks:
+  - "-*"
+  - "bugprone-*"
+  - "clang-analyzer-*"
+  - "modernize-*"
+  - "-modernize-use-trailing-return-type"
+  - "performance-*"
+  - "cppcoreguidelines-*"
+  - "readability-*"
+
+FormatStyle: file
+
+HeaderFilterRegex: "^(include)/*"

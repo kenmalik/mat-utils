@@ -4,37 +4,40 @@
 
 int main(int argc, char const *argv[]) {
     if (argc != 2) {
-        std::cerr << "Invalid arguments" << std::endl;
+        std::cerr << "Invalid arguments\n";
         return 1;
     }
-    mat_utils::SpMatReader mat(argv[1], {"Problem"}, "A");
+    mat_utils::MatReader<mat_utils::Sparsity::Sparse> mat(argv[1], // NOLINT
+                                                          {"Problem"}, "A");
 
     std::cout << "jc: ";
-    for (auto iter = mat.jc(); *iter < mat.jc_size(); iter++) {
-        std::cout << *iter << ' ';
+    for (const auto val : mat.column_pointers()) {
+        std::cout << val << ' ';
     }
-    std::cout << std::endl;
+    std::cout << '\n';
 
     std::cout << "ir: ";
-    for (auto iter = mat.ir(); *iter < mat.ir_size(); iter++) {
-        std::cout << *iter << ' ';
+    for (const auto val : mat.row_indices()) {
+        std::cout << val << ' ';
     }
-    std::cout << std::endl;
+    std::cout << '\n';
 
-    std::cout << "jc: " << mat.jc() << std::endl;
-    std::cout << "ir: " << mat.ir() << std::endl;
-    std::cout << "data: " << mat.data() << std::endl;
-    std::cout << "cols: " << mat.cols() << std::endl;
-    std::cout << "rows: " << mat.rows() << std::endl;
-    std::cout << "data_width: " << mat.data_width() << std::endl;
-    std::cout << "size: " << mat.size() << std::endl;
-    std::cout << "nnz: " << mat.nnz() << std::endl;
+    std::cout << "jc: " << mat.column_pointers().data() << '\n';
+    std::cout << "ir: " << mat.row_indices().data() << '\n';
+    std::cout << "data: " << mat.values<double>().data() << '\n';
 
-    std::vector<float> A(3 * 3, 10);
+    std::cout << "cols: " << mat.cols() << '\n';
+    std::cout << "rows: " << mat.rows() << '\n';
+
+    std::cout << "data_width: " << mat.data_width() << '\n';
+    std::cout << "size: " << mat.size() << '\n';
+    std::cout << "nnz: " << mat.nonzero_count() << '\n';
+
+    std::vector<float> A(3 * 3, 10); // NOLINT
     mat_utils::MatWriter w_A("A.mat");
     w_A.write_dense("A", A, 3, 3);
 
-    std::vector<double> B(3 * 3, 10);
+    std::vector<double> B(3 * 3, 10); // NOLINT
     mat_utils::MatWriter w_B("B.mat");
     w_B.write_dense("B", B, 3, 3);
 }
