@@ -24,10 +24,9 @@ class [[nodiscard]] MatReader {
               const std::vector<std::string> &structs, const std::string &field)
         : mat_file{matOpen(mat_file_name.c_str(), "r"),
                    handles::close_mat_file} {
-        using namespace std::string_literals;
-
         if (mat_file == nullptr) {
-            throw std::runtime_error("Error opening file "s + mat_file_name);
+            throw std::runtime_error(
+                std::format("Error opening file '{}'", mat_file_name));
         }
 
         if (structs.empty()) {
@@ -35,13 +34,15 @@ class [[nodiscard]] MatReader {
             A_ptr.reset(mxDuplicateArray(arr));
 
             if (A_ptr.get() == nullptr) {
-                throw std::invalid_argument("mxArray not found "s + field);
+                throw std::invalid_argument(
+                    std::format("mxArray not found '{}'", field));
             }
         } else {
             handles::mxArrayPtr last_struct = open_last_struct(structs);
 
             if (mxGetFieldNumber(last_struct.get(), field.c_str()) == -1) {
-                throw std::invalid_argument("field not found: "s + field);
+                throw std::invalid_argument(
+                    std::format("field not found: '{}'", field));
             }
 
             constexpr int INDEX = 0;
@@ -120,8 +121,6 @@ class [[nodiscard]] MatReader {
 
     handles::mxArrayPtr
     open_last_struct(const std::vector<std::string> &structs) {
-        using namespace std::string_literals;
-
         std::stack<handles::mxArrayPtr> open_structs{};
 
         auto structs_iter = structs.cbegin();
@@ -132,11 +131,13 @@ class [[nodiscard]] MatReader {
                 matGetVariable(mat_file.get(), arr.c_str()),
                 handles::destroy_mxArray};
             if (mat_variable.get() == nullptr) {
-                throw std::invalid_argument("mxArray not found "s + arr);
+                throw std::invalid_argument(
+                    std::format("mxArray not found '{}'", arr));
             }
 
             if (mxGetClassID(mat_variable.get()) != mxSTRUCT_CLASS) {
-                throw std::invalid_argument(arr + " is not a structure"s);
+                throw std::invalid_argument(
+                    std::format("'{}' is not a structure", arr));
             }
 
             open_structs.push(std::move(mat_variable));
@@ -148,7 +149,8 @@ class [[nodiscard]] MatReader {
             const auto &arr = *structs_iter;
 
             if (mxGetFieldNumber(current, arr.c_str()) == -1) {
-                throw std::invalid_argument("field not found: "s + arr);
+                throw std::invalid_argument(
+                    std::format("field not found: '{}'", arr));
             }
 
             constexpr int INDEX = 0;
@@ -156,11 +158,13 @@ class [[nodiscard]] MatReader {
                 mxGetField(current, INDEX, arr.c_str()),
                 handles::destroy_mxArray};
             if (next_struct.get() == nullptr) {
-                throw std::invalid_argument("mxArray not found "s + arr);
+                throw std::invalid_argument(
+                    std::format("mxArray not found '{}'", arr));
             }
 
             if (mxGetClassID(next_struct.get()) != mxSTRUCT_CLASS) {
-                throw std::invalid_argument(arr + " is not a structure"s);
+                throw std::invalid_argument(
+                    std::format("'{}' is not a structure", arr));
             }
 
             open_structs.push(std::move(next_struct));

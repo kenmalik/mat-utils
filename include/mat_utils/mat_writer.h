@@ -6,6 +6,7 @@
 #include <matrix.h>
 
 #include <algorithm>
+#include <format>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -54,8 +55,8 @@ class [[nodiscard]] MatWriter {
 
         if (matPutVariable(mat_file.get(), name.c_str(), pArr) != 0) {
             mxDestroyArray(pArr);
-            throw std::runtime_error("Error writing matrix '" + name +
-                                     "' to file");
+            throw std::runtime_error(
+                std::format("Error writing matrix '{}' to file", name));
         }
     }
 
@@ -72,8 +73,8 @@ class [[nodiscard]] MatWriter {
 
         if (matPutVariable(mat_file.get(), name.c_str(), pArr) != 0) {
             mxDestroyArray(pArr);
-            throw std::runtime_error("Error writing matrix '" + name +
-                                     "' to file");
+            throw std::runtime_error(
+                std::format("Error writing matrix '{}' to file", name));
         }
     }
 
