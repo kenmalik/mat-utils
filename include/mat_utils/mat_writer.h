@@ -15,8 +15,6 @@ namespace mat_utils {
 
 class [[nodiscard]] MatWriter {
   public:
-    MatWriter() = delete;
-
     explicit MatWriter(const std::string &filename)
         : mat_file{matOpen(filename.c_str(), "w"), handles::close_mat_file} {
         if (mat_file == nullptr) {
@@ -27,8 +25,9 @@ class [[nodiscard]] MatWriter {
 
     MatWriter(const MatWriter &) = delete;
     MatWriter &operator=(const MatWriter &) = delete;
-    MatWriter(MatWriter &&) = delete;
-    MatWriter &operator=(MatWriter &&) = delete;
+
+    MatWriter(MatWriter &&) = default;
+    MatWriter &operator=(MatWriter &&) = default;
 
     ~MatWriter() = default;
 

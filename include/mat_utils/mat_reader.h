@@ -58,8 +58,8 @@ class [[nodiscard]] MatReader {
     MatReader(const MatReader &) = delete;
     MatReader &operator=(const MatReader &) = delete;
 
-    MatReader(MatReader &&rhs) noexcept = default;
-    MatReader &operator=(MatReader &&rhs) noexcept = default;
+    MatReader(MatReader &&) noexcept = default;
+    MatReader &operator=(MatReader &&) noexcept = default;
 
     ~MatReader() = default;
 
